@@ -1,7 +1,18 @@
 from bs4 import BeautifulSoup
 import requests
+import json
 
-URL = 'https://www.mygov.in/covid-19'
+URL = 'https://api.covid19api.com/summary'
+
+class country_details():
+    def __init__(self,new_cases,tot_cases,new_rec):
+        self.new_cases = new_cases
+        self.tot_cases = tot_cases
+        self.new_rec = new_rec
+        self.message = message = "***INDIA***"+\
+                                "\nTotal cases till date: "+str(self.tot_cases)\
+                                +"\nNew cases yesterday: "+str(self.new_cases)+\
+                                "\nNew recoveries yesterday: "+str(self.new_rec)
 
 class corona_fetch():
 
@@ -9,12 +20,13 @@ class corona_fetch():
         result = requests.get(URL)
         soup = BeautifulSoup(result.content, 'html.parser')
         # text = str(soup.title)
-        num = soup.body.find_all('span', {"class": "icount"})
-        act_cases = int(num[0].contents[0])
-        rec_cases = int(num[1].contents[0])
-        dec_cases = int(num[2].contents[0])
-        mig_cases = int(num[3].contents[0])
-        tot_cases = act_cases+rec_cases+dec_cases+mig_cases
-        message = "***INDIA***\nTotal cases till date: "+str(tot_cases)+"\nActive cases: "+str(act_cases)+"\nRecovered cases: "+str(rec_cases)+"\nDeceased cases: "+str(dec_cases)+"\nMigrated cases: "+str(mig_cases)
-        return message
+        data = json.loads(str(soup))
 
+        for country in data["Countries"]:
+            if country["Country"]=='India':
+                india = country_details(new_cases=country["NewConfirmed"],
+                                        tot_cases=country["TotalConfirmed"],
+                                        new_rec=country["NewRecovered"]
+                                        )
+
+        return india.message
